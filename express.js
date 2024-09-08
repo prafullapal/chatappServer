@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 
@@ -16,7 +17,7 @@ const app = express();
 app.use(
   cors({
     origin: [process.env.ORIGIN],
-    methods: ["GET", "PSOT", "PUT", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
 );
@@ -28,8 +29,6 @@ app.use(express.json());
 app.use("/", router);
 
 // 404 and other custom error handler
-app.use(errorResponse);
-
 app.use(notFoundHandler);
 
 app.use(globalErrorHandler);
