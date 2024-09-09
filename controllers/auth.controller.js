@@ -448,11 +448,39 @@ const setupProfile = async (req, res, next) => {
       });
     }
 
-    return successResponse(res, { user }, "Profile setup successfully!");
+    return successResponse(res,  {
+      email: user.email,
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      image: user?.image || "",
+      color: user?.color || "",
+      profileSetup: user.profileSetup,
+    }, "Profile setup successfully!");
   } catch (err) {
     return next(err);
   }
 };
+
+const userInfo = async(req, res, next) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if(!user) return next({
+      status: 404,
+      message: "User not found!"
+    })
+
+    return successResponse(res, {
+      email: user.email,
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      image: user?.image || "",
+      color: user?.color || "",
+      profileSetup: user.profileSetup,
+    }, "User Info retrieved successfully!")
+  } catch (error) {
+    return next(error);
+  }
+}
 
 module.exports = {
   register,
@@ -463,4 +491,5 @@ module.exports = {
   verifyResetPasswordOtp,
   resetPassword,
   setupProfile,
+  userInfo,
 };
