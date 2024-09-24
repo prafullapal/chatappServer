@@ -157,6 +157,7 @@ const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
+    console.log(user);
 
     if (!user) {
       return next({
@@ -166,6 +167,7 @@ const login = async (req, res, next) => {
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
+    console.log(isPasswordCorrect);
 
     if (!isPasswordCorrect) {
       return next({
@@ -187,14 +189,19 @@ const login = async (req, res, next) => {
 
     if (existingToken) {
       if (!existingToken.isValid) {
-        return next({
-          status: 401,
-          message: "Invalid Credentials",
-        });
+        console.log("Invalid token, generating new one...");
       }
 
       refreshToken = crypto.randomBytes(40).toString("hex");
+      const userAgent = req.headers["user-agent"];
+      const ip = req.ip;
       existingToken.refreshToken = refreshToken;
+      existingToken.expiresAt = new Date(
+        new Date().getTime() + 30 * 24 * 60 * 60 * 1000
+      );
+      existingToken.isValid = true;
+      existingToken.ip = ip;
+      existingToken.userAgent = userAgent;
       await existingToken.save();
 
       attachTokensToCookies({ res, user: tokenUser, refreshToken });
@@ -247,7 +254,7 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
       return next({
@@ -256,7 +263,11 @@ const logout = async (req, res, next) => {
       });
     }
 
-    const token = await Token.findOne({ refreshToken });
+    payload = isTokenValid(refreshToken);
+    const token = await Token.findOne({
+      userId: req.user.userId,
+      refreshToken: payload.refreshToken,
+    });
 
     if (!token) {
       return next({
@@ -419,10 +430,10 @@ const resetPassword = async (req, res, next) => {
 
 const setupProfile = async (req, res, next) => {
   try {
-    const { firstName, lastName, image, color } = req.body;
+    const { firstName, lastName, color } = req.body;
     const userId = req.user.userId; // Assuming user ID is available in req.user
 
-    if (!firstName || !lastName || !image || !color) {
+    if (!firstName || !lastName || color === undefined) {
       return next({
         status: 400,
         message: "Please provide all profile details",
@@ -434,7 +445,6 @@ const setupProfile = async (req, res, next) => {
       {
         firstName,
         lastName,
-        image,
         color,
         profileSetup: true,
       },
@@ -448,39 +458,48 @@ const setupProfile = async (req, res, next) => {
       });
     }
 
-    return successResponse(res,  {
-      email: user.email,
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      image: user?.image || "",
-      color: user?.color || "",
-      profileSetup: user.profileSetup,
-    }, "Profile setup successfully!");
+    return successResponse(
+      res,
+      {
+        email: user.email,
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        image: user?.image || "",
+        color: user && user.color !== undefined ? user.color : null,
+        profileSetup: user.profileSetup,
+      },
+      "Profile setup successfully!"
+    );
   } catch (err) {
     return next(err);
   }
 };
 
-const userInfo = async(req, res, next) => {
+const userInfo = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.userId);
-    if(!user) return next({
-      status: 404,
-      message: "User not found!"
-    })
+    if (!user)
+      return next({
+        status: 404,
+        message: "User not found!",
+      });
 
-    return successResponse(res, {
-      email: user.email,
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      image: user?.image || "",
-      color: user?.color || "",
-      profileSetup: user.profileSetup,
-    }, "User Info retrieved successfully!")
+    return successResponse(
+      res,
+      {
+        email: user.email,
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        image: user?.image || "",
+        color: user && user.color !== undefined ? user.color : null,
+        profileSetup: user.profileSetup,
+      },
+      "User Info retrieved successfully!"
+    );
   } catch (error) {
     return next(error);
   }
-}
+};
 
 module.exports = {
   register,
