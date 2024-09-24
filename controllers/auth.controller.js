@@ -157,7 +157,6 @@ const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email });
-    console.log(user);
 
     if (!user) {
       return next({
@@ -167,7 +166,6 @@ const login = async (req, res, next) => {
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
-    console.log(isPasswordCorrect);
 
     if (!isPasswordCorrect) {
       return next({
