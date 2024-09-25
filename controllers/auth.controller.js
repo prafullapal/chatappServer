@@ -207,6 +207,7 @@ const login = async (req, res, next) => {
       return successResponse(
         res,
         {
+          _id: user._id,
           email: user.email,
           firstName: user?.firstName || "",
           lastName: user?.lastName || "",
@@ -236,6 +237,7 @@ const login = async (req, res, next) => {
     return successResponse(
       res,
       {
+        _id: user._id,
         email: user.email,
         firstName: user?.firstName || "",
         lastName: user?.lastName || "",
@@ -459,6 +461,7 @@ const setupProfile = async (req, res, next) => {
     return successResponse(
       res,
       {
+        _id: user._id,
         email: user.email,
         firstName: user?.firstName || "",
         lastName: user?.lastName || "",
@@ -485,6 +488,7 @@ const userInfo = async (req, res, next) => {
     return successResponse(
       res,
       {
+        _id: user._id,
         email: user.email,
         firstName: user?.firstName || "",
         lastName: user?.lastName || "",
