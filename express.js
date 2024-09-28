@@ -22,6 +22,8 @@ app.use(
   })
 );
 
+app.use("/uploads/files", express.static("uploads/files"));
+
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(express.json());
 
