@@ -91,7 +91,23 @@ const getContactsForDMList = async (req, res, next) => {
   }
 };
 
+const getAllContacts = async (req, res, next) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.user.userId } }, "firstName lastName _id email");
+
+    const contacts = users.map((user)=> ({
+      label: user.firstName ? `${user.firstName} ${user.lastName}` : user.email,
+      value: user._id,
+    }));
+
+    return successResponse(res, contacts, "Contacts fetched successfully");
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   searchContacts,
   getContactsForDMList,
+  getAllContacts,
 };
